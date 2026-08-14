@@ -1,0 +1,182 @@
+{% comment %}
+  KWADZILLA — coming soon
+
+  A monitor lizard on a white seamless backdrop, generated as geometry in
+  the browser. Its head and eyes follow the cursor; on a phone they follow
+  the phone, so tilting the handset keeps the animal looking back at you.
+  Everything else it does — breathing, blinking, tongue flicks, the tail,
+  the slow shift of weight — it does on its own.
+
+  Drop this on the password template for a coming-soon page, or on any
+  page template. Nothing here depends on the rest of the theme, so it can
+  be lifted into another one as-is.
+
+  CUSTOM FONT
+  Upload the .woff2 to assets/ and name it in the section's Typeface
+  setting. The @font-face is written below and the wordmark picks it up
+  through --kwad-font-display. Nothing else needs changing.
+{% endcomment %}
+
+{{ 'kwadzilla-splash.css' | asset_url | stylesheet_tag }}
+
+{%- liquid
+  assign vh = '100svh'
+  case section.settings.height
+    when 'large'
+      assign vh = '82svh'
+    when 'medium'
+      assign vh = '64svh'
+  endcase
+-%}
+
+{%- if section.settings.font_woff2 != blank -%}
+  {% style %}
+    @font-face {
+      font-family: "Kwadzilla Display";
+      src: url({{ section.settings.font_woff2 | asset_url }}) format("woff2");
+      font-weight: {{ section.settings.font_weight }};
+      font-style: normal;
+      font-display: swap;
+    }
+  {% endstyle %}
+{%- endif -%}
+
+{% style %}
+  #kwad-soon-{{ section.id }} {
+    min-height: {{ vh }};
+    --kwad-paper: {{ section.settings.color_paper }};
+    --kwad-ink: {{ section.settings.color_ink }};
+    --kwad-ink-soft: {{ section.settings.color_ink | color_mix: section.settings.color_paper, 55 }};
+    {%- if section.settings.font_woff2 != blank %}
+    --kwad-font-display: "Kwadzilla Display", {{ settings.type_heading_font.family }}, {{ settings.type_heading_font.fallback_families }};
+    {%- else %}
+    --kwad-font-display: {{ settings.type_heading_font.family }}, {{ settings.type_heading_font.fallback_families }};
+    {%- endif %}
+  }
+{% endstyle %}
+
+<div
+  id="kwad-soon-{{ section.id }}"
+  class="kwad-soon"
+  data-kwadzilla-soon
+>
+  {% comment %}
+    Shown until the canvas takes over, and for good if it never does, so a
+    visitor without WebGL gets a studio sweep rather than a blank white box.
+  {% endcomment %}
+  <div class="kwad-soon__floor" aria-hidden="true"></div>
+
+  <div class="kwad-soon__words">
+    {%- if section.settings.heading != blank -%}
+      <h1 class="kwad-soon__word" data-kwad-split>{{ section.settings.heading }}</h1>
+    {%- endif -%}
+    {%- if section.settings.subheading != blank -%}
+      <p class="kwad-soon__sub" data-kwad-split>{{ section.settings.subheading }}</p>
+    {%- endif -%}
+  </div>
+
+  {%- if section.settings.note != blank -%}
+    <p class="kwad-soon__note">{{ section.settings.note }}</p>
+  {%- endif -%}
+
+  {% comment %}
+    iOS will not hand out motion data without a gesture, so on those
+    devices — and only those — the script reveals this button. It hides
+    itself again after the first tilt.
+  {% endcomment %}
+  <button class="kwad-soon__tilt" type="button" data-kwad-tilt>
+    {{ section.settings.tilt_label }}
+  </button>
+</div>
+
+<script src="{{ 'kwadzilla-splash.js' | asset_url }}" defer></script>
+
+{% schema %}
+{
+  "name": "Kwadzilla coming soon",
+  "tag": "section",
+  "class": "kwadzilla-coming-soon",
+  "settings": [
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Heading",
+      "default": "2072"
+    },
+    {
+      "type": "text",
+      "id": "subheading",
+      "label": "Subheading",
+      "default": "Soundboy Kwad"
+    },
+    {
+      "type": "text",
+      "id": "note",
+      "label": "Footnote",
+      "default": "Coming soon"
+    },
+    {
+      "type": "select",
+      "id": "height",
+      "label": "Height",
+      "options": [
+        { "value": "full", "label": "Full screen" },
+        { "value": "large", "label": "Large" },
+        { "value": "medium", "label": "Medium" }
+      ],
+      "default": "full",
+      "info": "Use Large on the password page so the Enter using password link stays in view."
+    },
+    {
+      "type": "header",
+      "content": "Typeface"
+    },
+    {
+      "type": "text",
+      "id": "font_woff2",
+      "label": "Wordmark font file",
+      "info": "Filename of a .woff2 uploaded to assets, e.g. kwadzilla-display.woff2. Leave empty to use the theme font."
+    },
+    {
+      "type": "text",
+      "id": "font_weight",
+      "label": "Font weight",
+      "default": "400",
+      "info": "A single weight (400) or a variable range (400 700)."
+    },
+    {
+      "type": "header",
+      "content": "Colours"
+    },
+    {
+      "type": "color",
+      "id": "color_paper",
+      "label": "Backdrop",
+      "default": "#ffffff",
+      "info": "The lizard is always lit against white paper. This tints the page around it."
+    },
+    {
+      "type": "color",
+      "id": "color_ink",
+      "label": "Text",
+      "default": "#14140f"
+    },
+    {
+      "type": "header",
+      "content": "Motion"
+    },
+    {
+      "type": "text",
+      "id": "tilt_label",
+      "label": "Tilt permission prompt",
+      "default": "Tap to let it follow you",
+      "info": "Shown only on iOS, which requires a tap before a page may read device motion."
+    }
+  ],
+  "presets": [
+    {
+      "name": "Kwadzilla coming soon"
+    }
+  ]
+}
+{% endschema %}

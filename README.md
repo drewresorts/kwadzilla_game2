@@ -15,14 +15,14 @@ there are no images, fonts, or audio files to host.
 
 ## Two ways to use this
 
-This repo is **a complete Shopify theme** — Shopify's [Skeleton
-theme](https://github.com/Shopify/skeleton-theme) with the Kwadzilla game built
-on top. So you can either:
+This repo is **a complete Shopify theme** — Shopify's
+[Horizon](https://github.com/Shopify/horizon), the current flagship theme, with
+the Kwadzilla coming-soon page and game built on top. So you can either:
 
 - **[Upload the whole repo as a theme](#uploading-as-a-theme)**, or
-- **[Copy the game into a theme you already have](#installing-on-horizon)** —
-  the game files are self-contained and drop into Horizon, Dawn, or anything
-  else OS 2.0.
+- **[Copy the parts you want into a theme you already have](#installing-on-horizon)** —
+  the Kwadzilla files are self-contained and drop into Horizon, Dawn, or
+  anything else OS 2.0.
 
 ## Files
 
@@ -40,15 +40,18 @@ templates/page.kwadzilla-horizon.json   page template for the above
 sections/kwadzilla-game.liquid     all-in-one section — Dawn & older OS 2.0
 templates/page.kwadzilla.json      page template for the above
 
-assets/kwadzilla-splash.js         the coming-soon splash (WebGL)
+assets/kwadzilla-splash.js         the coming-soon page (WebGL)
 assets/kwadzilla-splash.css        splash styles + no-WebGL fallback
+sections/kwadzilla-coming-soon.liquid   section wrapping the above
+templates/password.json            the coming-soon page, wired up
+templates/page.coming-soon.json    the same thing as an ordinary page
 
-index.html                         the coming-soon splash
+index.html                         the coming-soon page
 game.html                          standalone game preview
 ```
 
 Everything else — `layout/`, `config/`, `locales/`, `snippets/`, and the rest
-of `sections/`, `blocks/`, `templates/` and `assets/` — is Skeleton, and is
+of `sections/`, `blocks/`, `templates/` and `assets/` — is Horizon, and is
 what makes the repo a theme rather than a pile of parts. See
 [Credits](#credits).
 
@@ -60,7 +63,7 @@ They're listed in `.shopifyignore` so they never get pushed to a store.
 With the [Shopify CLI](https://shopify.dev/docs/api/shopify-cli):
 
 ```bash
-shopify theme check      # 44 files, no offenses
+shopify theme check
 shopify theme dev        # preview against a dev store
 shopify theme push -u    # push as an unpublished theme
 ```
@@ -76,9 +79,16 @@ The theme's name and author live in `config/settings_schema.json` under
 `theme_info` — currently both `Kwadzilla`. Change them before you ship if you
 want something else in the admin.
 
-Once it's uploaded, the game is already wired up: create a page in **Online
-Store → Pages** and give it the **kwadzilla-horizon** template (theme blocks)
-or **kwadzilla** (all-in-one). Both ship with copy filled in.
+Once it's uploaded, both halves are already wired up.
+
+**The coming-soon page** is the password template, so turning on
+**Online Store → Preferences → Restrict access** is all it takes — visitors
+get the lizard, and the *Enter using password* link still gets you in. To put
+it on an ordinary URL instead, create a page in **Online Store → Pages** and
+give it the **coming-soon** template.
+
+**The game** goes on a page with the **kwadzilla-horizon** template (theme
+blocks) or **kwadzilla** (all-in-one). Both ship with copy filled in.
 
 ## Installing on Horizon
 
@@ -103,10 +113,10 @@ The block's **Backdrop** setting decides how it meets the page:
 | --- | --- |
 | `None` | The surrounding section already has the look you want. |
 | `Arcade night` | You want the cabinet as a self-contained dark panel. |
-| `Theme colour scheme` | You want it to follow one of the theme's schemes. |
+| `Theme palette` | You want it to follow the theme's own page colours. |
 
-On `None` and `Theme colour scheme` the buttons borrow the surrounding text
-colour, so they stay readable on a light scheme.
+On `None` and `Theme palette` the buttons borrow the surrounding text colour,
+so they stay readable on a light background.
 
 You can place more than one on a page; each instance runs independently.
 
@@ -128,16 +138,13 @@ the headline, copy, feature grid and footnote itself.
 Push it with `shopify theme push`, as in [Uploading as a
 theme](#uploading-as-a-theme).
 
-### The colour scheme backdrop
+### The theme palette backdrop
 
-`sections/kwadzilla-arcade.liquid` has a **Theme colour scheme** backdrop that
-reads the theme's own schemes. Skeleton ships without any, so this repo adds a
-`color_scheme_group` to `config/settings_schema.json` and emits a
-`.color-{scheme}` class per scheme from `snippets/css-variables.liquid`. Two
-schemes are defined out of the box — `scheme-1` light, `scheme-2` arcade dark.
-
-If you're dropping the game into Horizon or Dawn instead, they already define
-their own schemes and you don't need any of this.
+`sections/kwadzilla-arcade.liquid` and the game block both offer a **Theme
+palette** backdrop, which drops the arcade styling and takes the theme's own
+page colours (`--color-background` and `--color-foreground`) instead. Use it
+when the game should read as part of the page rather than as a panel dropped
+onto it.
 
 ### Settings
 
@@ -162,7 +169,7 @@ The splash and the game are plain HTML, so they need no Shopify tooling:
 
 ```bash
 python3 -m http.server 8000
-# http://localhost:8000/          the coming-soon splash
+# http://localhost:8000/          the coming-soon page
 # http://localhost:8000/game.html the game
 ```
 
@@ -170,41 +177,70 @@ To preview them the way a shopper would — inside the theme, with the header,
 footer and theme settings — use `shopify theme dev` against a dev store
 instead.
 
-## The coming-soon splash
+## The coming-soon page
 
-While the game is in development, `index.html` is a full-screen teaser and the
-game lives at `game.html`. Nothing on the splash links to the game.
+While the game is in development, the coming-soon page is the front door and
+the game lives at `game.html`. Nothing on the splash links to the game.
 
-It's one WebGL fullscreen triangle running a single fragment shader:
+It's a monitor lizard on a white seamless backdrop, lit like a studio shot.
+There is no model file: the animal is generated as geometry at load, skinned
+to a bone chain, and rendered in WebGL2.
 
-- **Procedural monitor-lizard hide.** Voronoi bead field with per-scale
-  roughness, analytic normals, two-depth parallax and ocellus rosettes. The key
-  light rides the cursor, so the whole surface shimmers as you move.
-- **Two eyes, dead centre.** Analytic spheres with corneal refraction into the
-  iris plane, procedural iris fibres, a round pupil (monitor lizards have round
-  pupils, not slits), a limbal ring, and a wet catchlight that tracks the light.
-  They track the cursor with real saccades — hold, then jump — plus
-  micro-saccades, idle wander and blinks.
-- **A red smoke wordmark.** The letterforms are hand-authored vector skeletons
-  with per-point width (`GLYPHS` in `kwadzilla-splash.js`), rasterised once into
-  an offscreen canvas that packs coverage, halo and dilation into R, G and B.
-  The shader then domain-warps that texture into drifting smoke and bleeds red
-  light back onto the beads underneath.
+- **The animal.** A spine of 90 bones swept into rings, with the girth,
+  superellipse cross-section and surface displacement authored against real
+  proportions — a 1.6 m monitor with a 17 cm head, a trunk wider than it is
+  tall and a tail that is the other way round. Brow ridges, eye sockets, the
+  jaw line, nostrils, the ear disc, a loose throat and a keeled tail all come
+  from the same displacement function. Four sprawled limbs, twenty toes, twenty
+  claws, two eyes with lids that actually close, and a forked tongue.
+- **The skin.** A tiling relief map is baked once into a framebuffer at
+  startup and sampled triplanar off the rest pose, so the scales never stretch
+  or seam however hard the animal bends. Markings are procedural: rows of pale
+  ocelli across the back, bands down the tail, a barred jaw, a cream underside.
+- **The studio.** A three-light rig on a white cyclorama, with the backdrop lit
+  harder than the subject the way a real seamless is. Contact shadow and
+  ambient occlusion are integrated analytically against a couple of dozen
+  spheres that track the animal — with a source this soft that lands closer
+  than a shadow map would.
+- **The framing.** The camera solves for itself: it takes the animal's bounds,
+  picks a presentation angle from the aspect ratio, and iterates distance and
+  aim until the subject fills the frame properly. A phone in portrait gets the
+  animal turned towards the lens rather than a cropped tail.
 
-On mobile the eyes follow touch immediately. iOS gates the gyroscope behind a
-permission call that only works inside a user gesture, so a small **Tap to let
-it watch you** button appears there; on Android tilt is wired up straight away.
-The grant is remembered in `localStorage`.
+**What the visitor controls is its attention, and nothing else.** The head and
+eyes follow the cursor. Each eye aims itself, covering whatever the neck did
+not, clamped to what an eye can physically do. On a phone the same thing is
+driven by the gyroscope, so tilting the handset keeps the animal looking back
+at you.
 
-Still zero dependencies and zero network requests — no fonts, no images, no
-libraries. If WebGL is missing or JavaScript is off, a pure-CSS lizard with
-cursor-tracking eyes and a glowing wordmark takes over; the words are real DOM
+Everything else it does on its own: breathing, throat pumping, blinks that
+sometimes double, tongue flicks in bursts of one to three, a slow travelling
+wave down the tail, weight shifting between the feet, the occasional re-planted
+foot, and a rare full-body stretch.
+
+Still zero dependencies and zero network requests. If WebGL2 is missing or
+JavaScript is off, a soft studio floor sweep takes over; the words are real DOM
 either way, so screen readers and crawlers always get them.
 
-`prefers-reduced-motion` freezes the smoke, blinks and idle drift but keeps the
-cursor-driven light, parallax and gaze, since those are direct responses to the
-visitor's own input. Render scale drops automatically if frames get expensive,
-and a lost WebGL context is recovered rather than left as a black page.
+`prefers-reduced-motion` damps the idle behaviour to a fraction but keeps the
+gaze, since that is a direct response to the visitor's own input. Render scale
+drops automatically if frames get expensive, and the whole thing pauses when
+the tab is hidden or the page scrolls away.
+
+### The custom font
+
+The wordmark reads from `--kwad-font-display`. Upload a `.woff2` to `assets/`
+and name it in the section's **Typeface** setting; the `@font-face` is written
+for you and nothing else needs touching. Outside Shopify, uncomment the block
+at the top of `index.html`.
+
+The wordmark is already wired for animation. Every character is wrapped in its
+own `<span class="kwad-soon__ch">` with `--i` set to its index and `--n` to the
+total, the original string is kept alongside for screen readers, and
+`.kwad-soon` gains `.is-ready` on the first rendered frame. That's a per-letter
+stagger handle and a start signal; what ships now is a single plain settle,
+which is meant to be replaced once the real face lands. See the *wordmark
+animation hooks* block at the bottom of `assets/kwadzilla-splash.css`.
 
 ## Controls
 
@@ -294,12 +330,11 @@ was invented for the game — no real place, company or person is depicted.
 
 ## Credits
 
-The theme scaffolding is Shopify's [Skeleton
-theme](https://github.com/Shopify/skeleton-theme) — the reference theme
-Shopify publishes as a starting point — copied in unmodified apart from the
-colour-scheme group described [above](#the-colour-scheme-backdrop) and the
-`theme_info` name and author. It's MIT-licensed; see `LICENSE.md`, which
-covers that scaffolding rather than the game.
+The theme scaffolding is Shopify's [Horizon](https://github.com/Shopify/horizon)
+(v4.1.3) — the flagship theme Shopify ships as the default — copied in
+unmodified apart from the `theme_info` name and author, and the password
+template, which now points at the coming-soon section. It's MIT-licensed; see
+`LICENSE.md`, which covers that scaffolding rather than the game.
 
 Note the licence limits use to themes that integrate with Shopify, which is
 exactly what this is.

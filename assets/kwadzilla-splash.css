@@ -1,127 +1,85 @@
 /*!
- * KWADZILLA — 2072 / SOUNDBOY KWAD
- * Coming-soon splash. Scoped under .kwad-soon so it can be dropped into any
- * Shopify theme without leaking.
+ * KWADZILLA — coming soon
+ * A studio portrait of a monitor lizard on a white seamless backdrop.
  *
- * Two layers live here:
+ * Everything is scoped under .kwad-soon so this can drop into any theme
+ * without leaking. Two layers live here:
  *   1. the WebGL canvas the script injects (.kwad-soon__gl), and
- *   2. a pure-CSS lizard + wordmark that shows whenever WebGL or JS is
- *      unavailable. The script adds .is-gl on success, which hides layer 2
- *      visually while leaving it in the accessibility tree.
+ *   2. the wordmark, which is real text and stays put whether or not the
+ *      canvas ever appears.
+ *
+ * ------------------------------------------------------------------
+ * CUSTOM FONT HOOK
+ * ------------------------------------------------------------------
+ * The wordmark reads from --kwad-font-display. Drop the face in and it
+ * takes over everywhere; nothing else needs touching.
+ *
+ *   @font-face {
+ *     font-family: "Kwadzilla Display";
+ *     src: url("kwadzilla-display.woff2") format("woff2");
+ *     font-weight: 400;
+ *     font-display: swap;
+ *   }
+ *   .kwad-soon { --kwad-font-display: "Kwadzilla Display", sans-serif; }
+ *
+ * In the Shopify section the @font-face is emitted for you — upload the
+ * .woff2 to assets/ and pick it in the theme editor.
+ *
+ * The wordmark is also pre-wired for animation later: every letter is
+ * wrapped in its own <span class="kwad-soon__ch"> with --i set to its
+ * index, and the whole block gets .is-ready once the scene is up. See
+ * the "wordmark animation hooks" block at the bottom of this file.
  */
 
 .kwad-soon {
-  --kwad-soon-hide: #0a0c08;
-  --kwad-soon-ground: #1d2118;
-  --kwad-soon-olive: #2f3a24;
-  --kwad-soon-ochre: #c9a24a;
-  --kwad-soon-cream: #e6d9a8;
-  --kwad-soon-red: #ff2a18;
-  --kwad-soon-red-dim: #8e1206;
-  --kwad-soon-ink: #eaf2ff;
-  --kwad-soon-dim: #93a3c4;
-  --kwad-soon-mono: ui-monospace, "SFMono-Regular", "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  /* Swap this one line once the real face is in the theme. */
+  --kwad-font-display: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Helvetica, Arial, sans-serif;
+  --kwad-font-meta: ui-monospace, "SFMono-Regular", "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
 
-  /* Written by the pointer handler so the CSS eyes track too. */
-  --kwad-gaze-x: 0;
-  --kwad-gaze-y: 0;
+  --kwad-paper: #ffffff;
+  --kwad-ink: #14140f;
+  --kwad-ink-soft: #6a6a60;
+  --kwad-hair: rgba(20, 20, 15, 0.14);
 
-  position: fixed;
-  inset: 0;
-  overflow: hidden;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-height: 100svh;
   margin: 0;
-  background: var(--kwad-soon-hide);
-  color: var(--kwad-soon-ink);
-  font-family: var(--kwad-soon-mono);
+  overflow: hidden;
+  background: var(--kwad-paper);
+  color: var(--kwad-ink);
   text-align: center;
-  touch-action: none;
-  overscroll-behavior: none;
-  cursor: crosshair;
+  touch-action: pan-y;
+  overscroll-behavior-y: none;
 }
 
+/* The studio. Sits behind the words and fills the frame. */
 .kwad-soon__gl {
   position: absolute;
   inset: 0;
   display: block;
   width: 100%;
   height: 100%;
+  border: 0;
+  /* The backdrop the shader paints is white, so a mid-load canvas
+     matches the page instead of flashing black. */
+  background: var(--kwad-paper);
 }
 
-/* ------------------------------------------------------------------ */
-/* CSS fallback — scales                                               */
-/* ------------------------------------------------------------------ */
-
-/* Hidden the moment the real thing is running. Kept in the flow (not
-   display:none) so the words underneath stay reachable by screen readers. */
-.kwad-soon__static {
+/* Shown until the canvas takes over, and for good if it never does:
+   a soft studio floor sweep so the page is never a blank white void. */
+.kwad-soon__floor {
   position: absolute;
   inset: 0;
-  opacity: 1;
-  transition: opacity 420ms ease;
-  background-color: var(--kwad-soon-ground);
-  background-image:
-    radial-gradient(60% 45% at 50% 30%, rgba(90, 104, 62, 0.55) 0%, rgba(90, 104, 62, 0) 70%),
-    radial-gradient(90% 70% at 50% 110%, rgba(8, 10, 6, 0.85) 0%, rgba(8, 10, 6, 0) 65%),
-    repeating-conic-gradient(
-      from 30deg,
-      var(--kwad-soon-olive) 0deg 60deg,
-      var(--kwad-soon-ground) 60deg 120deg);
-  background-size: auto, auto, 26px 26px;
-}
-
-.kwad-soon.is-gl .kwad-soon__static { opacity: 0; }
-
-/* ------------------------------------------------------------------ */
-/* CSS fallback — eyes                                                 */
-/* ------------------------------------------------------------------ */
-
-.kwad-soon__eye {
-  position: absolute;
-  top: 43%;
-  width: clamp(84px, 15vmin, 190px);
-  height: clamp(56px, 10vmin, 128px);
-  margin-top: calc(clamp(56px, 10vmin, 128px) / -2);
-  border-radius: 50%;
   background:
-    radial-gradient(closest-side circle at 50% 50%,
-      #12100a 0%, #12100a 21%,
-      #7a4e08 22%, #b8862a 40%,
-      #e0ae3e 58%, #8a5c14 78%,
-      #120e05 92%, #050403 100%);
-  box-shadow:
-    inset 0 0.35em 0.7em rgba(0, 0, 0, 0.85),
-    0 0 0 2px rgba(10, 12, 8, 0.9),
-    0 0 3.5em rgba(200, 150, 40, 0.22);
-  clip-path: ellipse(50% 50% at 50% 50%);
+    radial-gradient(58% 30% at 50% 78%, rgba(20, 20, 15, 0.13), rgba(20, 20, 15, 0) 70%),
+    linear-gradient(#ffffff 0%, #ffffff 52%, #f6f5f2 78%, #efeee9 100%);
+  transition: opacity 700ms ease;
 }
 
-.kwad-soon__eye--l { right: 52%; margin-right: clamp(6px, 1.2vmin, 16px); }
-.kwad-soon__eye--r { left: 52%; margin-left: clamp(6px, 1.2vmin, 16px); }
-
-/* Pupil + catchlight, offset by the shared gaze custom properties. */
-.kwad-soon__eye i {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 21%;
-  height: 32%;
-  border-radius: 50%;
-  background: #08070b;
-  transform: translate(-50%, -50%)
-             translate(calc(var(--kwad-gaze-x) * 22%), calc(var(--kwad-gaze-y) * -16%));
-  box-shadow: 0 0 0.5em rgba(0, 0, 0, 0.9);
-}
-
-.kwad-soon__eye i::after {
-  content: "";
-  position: absolute;
-  top: -14%;
-  left: 8%;
-  width: 46%;
-  height: 34%;
-  border-radius: 50%;
-  background: rgba(255, 250, 235, 0.92);
-  filter: blur(0.5px);
+.kwad-soon.is-gl .kwad-soon__floor {
+  opacity: 0;
 }
 
 /* ------------------------------------------------------------------ */
@@ -129,119 +87,162 @@
 /* ------------------------------------------------------------------ */
 
 .kwad-soon__words {
-  position: absolute;
-  left: 50%;
-  top: 62%;
-  width: min(92vw, 900px);
-  transform: translateX(-50%);
-}
-
-.kwad-soon__word,
-.kwad-soon__sub {
-  margin: 0;
-  font-family: Impact, "Haettenschweiler", "Arial Narrow Bold", "Anton", var(--kwad-soon-mono);
-  font-weight: 900;
-  text-transform: uppercase;
-  color: #ffd9cf;
-  text-shadow:
-    0 0 0.08em #fff,
-    0 0 0.24em var(--kwad-soon-red),
-    0 0 0.7em var(--kwad-soon-red),
-    0 0 1.6em var(--kwad-soon-red-dim),
-    0 0.06em 0.12em rgba(0, 0, 0, 0.65);
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.55rem;
+  padding: clamp(2rem, 6vh, 4.5rem) 1.5rem 0;
+  pointer-events: none;
 }
 
 .kwad-soon__word {
-  font-size: clamp(3.4rem, 17vw, 10rem);
-  line-height: 0.92;
-  letter-spacing: 0.06em;
+  margin: 0;
+  font-family: var(--kwad-font-display);
+  font-size: clamp(3.2rem, 13vw, 9.5rem);
+  font-weight: 500;
+  line-height: 0.86;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
 }
 
 .kwad-soon__sub {
-  margin-top: 0.35em;
-  font-size: clamp(1.05rem, 5.2vw, 3rem);
-  line-height: 1;
-  letter-spacing: 0.22em;
-}
-
-.kwad-soon__note {
-  margin: 1.6em 0 0;
-  font-size: clamp(0.58rem, 1.6vw, 0.72rem);
-  letter-spacing: 0.42em;
-  text-transform: uppercase;
-  color: rgba(147, 163, 196, 0.62);
-}
-
-/* In WebGL mode the shader draws the wordmark, so clip the DOM copies away
-   — visually only. They stay in the accessibility tree, so screen readers
-   and crawlers always get the real words. */
-.kwad-soon.is-gl .kwad-soon__word,
-.kwad-soon.is-gl .kwad-soon__sub {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0 0 0 0);
-  clip-path: inset(50%);
-  white-space: nowrap;
-}
-
-/* "Coming soon" is DOM-only, so it survives into WebGL mode as a real,
-   selectable line of text pinned to the bottom of the screen. */
-.kwad-soon.is-gl .kwad-soon__words {
-  top: auto;
-  bottom: max(1.6rem, env(safe-area-inset-bottom, 0px));
-  width: auto;
-}
-
-.kwad-soon.is-gl .kwad-soon__note {
   margin: 0;
-  white-space: nowrap;
+  font-family: var(--kwad-font-display);
+  font-size: clamp(0.95rem, 2.6vw, 1.5rem);
+  font-weight: 400;
+  letter-spacing: 0.42em;
+  text-indent: 0.42em;
+  text-transform: uppercase;
 }
 
-/* ------------------------------------------------------------------ */
-/* Tilt permission prompt (iOS only)                                   */
-/* ------------------------------------------------------------------ */
+/* Pinned to the bottom of the frame so the lizard owns the middle. */
+.kwad-soon__note {
+  position: relative;
+  z-index: 2;
+  margin: auto 0 0;
+  padding: 0 1.5rem clamp(1.6rem, 5vh, 3rem);
+  font-family: var(--kwad-font-meta);
+  font-size: 0.72rem;
+  font-weight: 400;
+  letter-spacing: 0.34em;
+  text-indent: 0.34em;
+  text-transform: uppercase;
+  color: var(--kwad-ink-soft);
+  pointer-events: none;
+}
 
+/* One-time nudge on phones, and only where tilt is actually available.
+   The script adds .is-visible, then drops it after the first tilt. */
 .kwad-soon__tilt {
   position: absolute;
-  left: 50%;
-  bottom: calc(max(1.6rem, env(safe-area-inset-bottom, 0px)) + 2.4rem);
-  transform: translateX(-50%);
-  padding: 0.7em 1.3em;
-  font-family: inherit;
-  font-size: 0.66rem;
-  letter-spacing: 0.28em;
+  inset: auto 0 0;
+  z-index: 3;
+  display: block;
+  width: 100%;
+  padding: 0.9rem 1.5rem 1.15rem;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  color: var(--kwad-ink-soft);
+  font: inherit;
+  font-family: var(--kwad-font-meta);
+  font-size: 0.68rem;
+  letter-spacing: 0.26em;
+  text-indent: 0.26em;
   text-transform: uppercase;
-  color: rgba(234, 242, 255, 0.72);
-  background: rgba(10, 12, 8, 0.42);
-  border: 1px solid rgba(201, 162, 74, 0.34);
-  border-radius: 999px;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 500ms ease, visibility 0s linear 500ms;
   cursor: pointer;
-  -webkit-backdrop-filter: blur(6px);
-  backdrop-filter: blur(6px);
-  animation: kwad-soon-pulse 3.2s ease-in-out infinite;
 }
 
-.kwad-soon__tilt:hover,
+.kwad-soon__tilt.is-visible {
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 500ms ease;
+}
+
 .kwad-soon__tilt:focus-visible {
-  color: #fff;
-  border-color: rgba(201, 162, 74, 0.7);
-}
-
-.kwad-soon__tilt[hidden] { display: none; }
-
-@keyframes kwad-soon-pulse {
-  0%, 100% { opacity: 0.55; }
-  50%      { opacity: 0.9; }
+  outline: 2px solid var(--kwad-ink);
+  outline-offset: -4px;
 }
 
 /* ------------------------------------------------------------------ */
-/* Motion                                                              */
+/* Wordmark animation hooks                                            */
+/* ------------------------------------------------------------------ */
+/*
+ * The script splits the wordmark into per-character spans and sets
+ * --i (index) and --n (total) on each, then adds .is-ready to .kwad-soon
+ * on the first rendered frame. That's everything a later animation needs:
+ * a per-letter stagger handle and a start signal.
+ *
+ * What ships now is deliberately plain — a single settle, no bounce —
+ * so it reads as a photograph rather than a title sequence. Replace the
+ * keyframes below when the real face lands.
+ */
+
+.kwad-soon__ch {
+  display: inline-block;
+  white-space: pre;
+  will-change: transform, opacity;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .kwad-soon__words .kwad-soon__ch {
+    opacity: 0;
+    transform: translate3d(0, 0.18em, 0);
+  }
+
+  .kwad-soon.is-ready .kwad-soon__ch {
+    animation: kwad-soon-settle 900ms cubic-bezier(0.22, 0.68, 0.24, 1) forwards;
+    animation-delay: calc(var(--i, 0) * 45ms + var(--kwad-delay, 0ms));
+  }
+
+  .kwad-soon__note {
+    opacity: 0;
+    transition: opacity 900ms ease 700ms;
+  }
+
+  .kwad-soon.is-ready .kwad-soon__note {
+    opacity: 1;
+  }
+}
+
+@keyframes kwad-soon-settle {
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Small screens                                                       */
 /* ------------------------------------------------------------------ */
 
-@media (prefers-reduced-motion: reduce) {
-  .kwad-soon__static { transition: none; }
-  .kwad-soon__tilt { animation: none; opacity: 0.75; }
+@media (max-width: 640px) {
+  .kwad-soon__sub {
+    letter-spacing: 0.3em;
+    text-indent: 0.3em;
+  }
+}
+
+/* Landscape phones have no vertical room to spare. */
+@media (max-height: 520px) {
+  .kwad-soon__words {
+    padding-top: 1.1rem;
+    gap: 0.3rem;
+  }
+
+  .kwad-soon__word {
+    font-size: clamp(2.4rem, 9vh, 4rem);
+  }
+}
+
+@media print {
+  .kwad-soon__gl,
+  .kwad-soon__tilt {
+    display: none;
+  }
 }

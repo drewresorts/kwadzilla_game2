@@ -4,42 +4,57 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>2072 — Soundboy Kwad</title>
-<meta name="description" content="2072. Soundboy Kwad. Something very large is waking up.">
-<meta name="theme-color" content="#0a0c08">
+<meta name="description" content="2072. Soundboy Kwad. Coming soon.">
+<meta name="theme-color" content="#ffffff">
 
 <!-- Social preview (swap the image URL for your own once hosted) -->
 <meta property="og:title" content="2072 — Soundboy Kwad">
-<meta property="og:description" content="Something very large is waking up.">
+<meta property="og:description" content="Coming soon.">
 <meta property="og:type" content="website">
 
 <link rel="stylesheet" href="./assets/kwadzilla-splash.css">
 <style>
-  html, body { margin: 0; padding: 0; height: 100%; background: #0a0c08; }
-  body { -webkit-font-smoothing: antialiased; overflow: hidden; }
+  html, body { margin: 0; padding: 0; background: #fff; }
+  body { -webkit-font-smoothing: antialiased; }
+
+  /*
+    CUSTOM FONT — drop the file in and uncomment. Nothing else changes.
+
+    @font-face {
+      font-family: "Kwadzilla Display";
+      src: url("./assets/kwadzilla-display.woff2") format("woff2");
+      font-weight: 400 700;
+      font-display: swap;
+    }
+    .kwad-soon { --kwad-font-display: "Kwadzilla Display", sans-serif; }
+  */
 </style>
 </head>
 <body>
 
 <!--
   The WebGL canvas is injected by the script, so a visitor with JavaScript
-  off never sees an empty black box. Everything below is the real content:
-  it stays in the accessibility tree at all times, and becomes the visible
-  page whenever WebGL is unavailable.
+  off never sees an empty white box. Everything below is the real content:
+  it stays in the accessibility tree at all times, and it is the whole page
+  whenever WebGL is unavailable.
+
+  data-kwad-split marks text the script splits into per-letter spans for
+  the animation hooks; the original string is kept for screen readers.
 -->
 <main class="kwad-soon" data-kwadzilla-soon>
 
-  <div class="kwad-soon__static" aria-hidden="true">
-    <div class="kwad-soon__eye kwad-soon__eye--l"><i></i></div>
-    <div class="kwad-soon__eye kwad-soon__eye--r"><i></i></div>
-  </div>
+  <div class="kwad-soon__floor" aria-hidden="true"></div>
 
   <div class="kwad-soon__words">
-    <h1 class="kwad-soon__word">2072</h1>
-    <p class="kwad-soon__sub">Soundboy Kwad</p>
-    <p class="kwad-soon__note">Coming soon</p>
+    <h1 class="kwad-soon__word" data-kwad-split>2072</h1>
+    <p class="kwad-soon__sub" data-kwad-split>Soundboy Kwad</p>
   </div>
 
-  <noscript><style>.kwad-soon__static { opacity: 1; }</style></noscript>
+  <p class="kwad-soon__note">Coming soon</p>
+
+  <button class="kwad-soon__tilt" type="button" data-kwad-tilt>
+    Tap to let it follow you
+  </button>
 
 </main>
 

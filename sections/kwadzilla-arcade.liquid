@@ -12,8 +12,12 @@
 {{ 'kwadzilla-game.css' | asset_url | stylesheet_tag }}
 
 <div
-  class="kwad-hero{% if section.settings.backdrop == 'scheme' %} kwad-hero--plain color-{{ section.settings.color_scheme }}{% endif %}"
+  class="kwad-hero{% if section.settings.backdrop == 'palette' %} kwad-hero--plain{% endif %}"
   style="
+    {%- if section.settings.backdrop == 'palette' %}
+    background: var(--color-background);
+    color: var(--color-foreground);
+    {%- endif %}
     --kwad-acid: {{ section.settings.color_accent }};
     --kwad-hot: {{ section.settings.color_secondary }};
     padding-top: {{ section.settings.padding_top }}px;
@@ -37,16 +41,10 @@
       "label": "Backdrop",
       "options": [
         { "value": "arcade", "label": "Arcade night" },
-        { "value": "scheme", "label": "Theme colour scheme" }
+        { "value": "palette", "label": "Theme palette" }
       ],
-      "default": "arcade"
-    },
-    {
-      "type": "color_scheme",
-      "id": "color_scheme",
-      "label": "Colour scheme",
-      "info": "Used when Backdrop is set to Theme colour scheme.",
-      "default": "scheme-1"
+      "default": "arcade",
+      "info": "Theme palette follows the theme's own page colours."
     },
     {
       "type": "color",

@@ -16,8 +16,12 @@
 {{ 'kwadzilla-game.css' | asset_url | stylesheet_tag }}
 
 <div
-  class="kwad-embed{% if block.settings.surface == 'dark' %} kwad-embed--dark{% endif %}{% if block.settings.surface == 'scheme' %} color-{{ block.settings.color_scheme }}{% endif %}"
+  class="kwad-embed{% if block.settings.surface == 'dark' %} kwad-embed--dark{% endif %}"
   style="
+    {%- if block.settings.surface == 'palette' %}
+    background: var(--color-background);
+    color: var(--color-foreground);
+    {%- endif %}
     --kwad-acid: {{ block.settings.color_accent }};
     --kwad-hot: {{ block.settings.color_secondary }};
     max-width: {{ block.settings.max_width }}px;
@@ -72,16 +76,9 @@
       "options": [
         { "value": "none", "label": "None (inherit section)" },
         { "value": "dark", "label": "Arcade night" },
-        { "value": "scheme", "label": "Theme colour scheme" }
+        { "value": "palette", "label": "Theme palette" }
       ],
       "default": "dark"
-    },
-    {
-      "type": "color_scheme",
-      "id": "color_scheme",
-      "label": "Colour scheme",
-      "info": "Used when Backdrop is set to Theme colour scheme.",
-      "default": "scheme-1"
     },
     {
       "type": "range",
